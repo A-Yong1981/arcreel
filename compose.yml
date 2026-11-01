@@ -1,0 +1,70 @@
+name: arcreel
+
+services:
+  arcreel:
+    image: arcreel/arcreel:latest
+    container_name: arcreel
+    restart: always
+    privileged: true
+    environment:
+      AUTH_PASSWORD: ${ARCREEL_AUTH_PASSWORD:?Set ARCREEL_AUTH_PASSWORD in .env}
+    security_opt:
+      - label=disable
+    ports:
+      - "1241:1241"
+    volumes:
+      - ./data/arcreel/projects:/app/projects
+    networks:
+      - arcreel
+
+  muse-uploader:
+    build:
+      context: ./arcreel-muse-uploader
+      dockerfile: Dockerfile
+    container_name: arcreel-muse-uploader
+    restart: unless-stopped
+    env_file:
+      - ./arcreel-muse-uploader/.env
+    environment:
+      ARCREEL_API_BASE: http://arcreel:1241/api/v1
+    depends_on:
+      - arcreel
+    ports:
+      - "127.0.0.1:18081:8080"
+    read_only: true
+    tmpfs:
+      - /tmp:size=256m,noexec,nosuid
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    networks:
+      - arcreel
+
+  arcreel-bridge:
+    build:
+      context: ./arcreel-bridge
+      dockerfile: Dockerfile
+    image: arcreel-bridge:local
+    container_name: arcreel-bridge
+    restart: unless-stopped
+    env_file:
+      - ./arcreel-bridge/.env
+    environment:
+      BRIDGE_DATABASE_URL: sqlite:////app/data/bridge.db
+    ports:
+      - "18080:8080"
+    volumes:
+      - ./arcreel-bridge/data:/app/data
+    networks:
+      - arcreel
+
+networks:
+  arcreel:
+    name: arcreel
+    driver: bridge
+
+
+
+
+
