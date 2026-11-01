@@ -1,0 +1,23 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><title>ArcReel 登录</title></head>
+<body><h1>ArcReel 登录</h1>
+<label>用户 ID <input id="user_id"></label><br>
+<label>OTP 验证码 <input id="code" maxlength="6" inputmode="numeric"></label><br>
+<button id="login">登录</button>
+<p><a href="devices.html">我的设备</a> · <a href="#" id="recovery">使用一次性恢复码</a></p>
+<p id="msg"></p>
+<script>
+document.getElementById('login').onclick = async () => {
+  const user_id = document.getElementById('user_id').value.trim();
+  const code = document.getElementById('code').value.trim();
+  const r = await fetch('/auth/totp/verify-and-login', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({user_id, code})});
+  const d = await r.json();
+  if (r.ok) { localStorage.setItem('session_token', d.session_token); localStorage.setItem('device_id', d.device_id); document.getElementById('msg').textContent = '登录成功'; }
+  else document.getElementById('msg').textContent = '登录失败：' + (d.detail || r.status);
+};
+document.getElementById('recovery').onclick = async (e) => {
+  e.preventDefault();
+  const user_id = prompt('用户 ID'); const code = prompt('一次性恢复码');
+  const r = await fetch('/auth/recovery-code/use?user_id=' + encodeURIComponent(user_id) + '&code=' + encodeURIComponent(code), {method:'POST'});
+  document.getElementById('msg').textContent = r.ok ? '恢复码验证通过' : '恢复码无效';
+};
+</script></body></html>
