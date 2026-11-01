@@ -1,0 +1,27 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><title>我的设备</title></head>
+<body><h1>我的设备</h1><ul id="list"></ul><p id="msg"></p>
+<script>
+(async () => {
+  const token = localStorage.getItem('session_token');
+  const r = await fetch('/auth/devices', {headers:{Authorization:'Bearer '+token}});
+  if (!r.ok) { document.getElementById('msg').textContent = '请先登录'; return; }
+  const rows = await r.json();
+  const ul = document.getElementById('list');
+  rows.forEach(row => {
+    const li = document.createElement('li');
+    li.textContent = row.device_name + ' · ' + row.bind_method + ' · ' + row.status + ' · 上次验证 ' + row.last_verified_at;
+    if (row.status === 'active') {
+      const btn = document.createElement('button'); btn.textContent = '解绑';
+      btn.onclick = async () => {
+        if (!confirm('确定解绑这台设备？解绑后它的会话会立即失效。')) return;
+        const code = prompt('请输入当前有效的 TOTP 验证码（二次确认）');
+        const res = await fetch('/auth/unbind', {method:'POST', headers:{'Content-Type':'application/json', Authorization:'Bearer '+token}, body: JSON.stringify({device_id: row.device_id, totp_code: code || ''})});
+        document.getElementById('msg').textContent = res.ok ? '已解绑' : '解绑失败，需要有效的二次确认';
+        if (res.ok) location.reload();
+      };
+      li.appendChild(btn);
+    }
+    ul.appendChild(li);
+  });
+})();
+</script></body></html>
