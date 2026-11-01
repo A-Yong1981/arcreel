@@ -1,0 +1,13 @@
+services:
+  bridge:
+    build: .
+    image: arcreel-bridge:local
+    container_name: arcreel-bridge
+    restart: unless-stopped
+    ports:
+      - "18080:8080"
+    environment:
+      - BRIDGE_DATABASE_URL=sqlite:////app/data/bridge.db
+      - TOTP_ENCRYPTION_KEY=${TOTP_ENCRYPTION_KEY:?set TOTP_ENCRYPTION_KEY}
+    volumes:
+      - ./data:/app/data
