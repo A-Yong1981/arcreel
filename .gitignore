@@ -1,0 +1,16 @@
+.env
+**/.env
+!**/env.example
+**/__pycache__/
+**/*.py[cod]
+**/.venv/
+**/venv/
+**/data/
+**/projects/
+**/*.db
+**/*.db-*
+**/logs/
+**/*.log
+.DS_Store
+arcreel-bridge/wheels/
+arcreel-bridge-wheels-arm64.tar.gz
